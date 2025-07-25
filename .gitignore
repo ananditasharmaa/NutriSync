@@ -1,0 +1,5 @@
+# Ignore secrets and Python junk
+.streamlit/secrets.toml
+__pycache__/
+*.pyc
+.env
