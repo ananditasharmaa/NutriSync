@@ -1,11 +1,18 @@
-﻿streamlit
-langchain
-langchain-core
-langchain-community
-langchain-google-genai
-google-generativeai
-plotly
-pandas
+﻿streamlit==1.32.2
+
+# LangChain (matching known compatible versions)
+langchain==0.2.11
+langchain-core==0.2.22
+langchain-community==0.2.11
+
+# Google Generative AI specific SDK versions that match that LangChain range
+langchain-google-genai==1.0.6
+google-generativeai==0.7.1
+
+# Required dependencies
 pydantic==1.10.13
 pydantic_core==2.14.6
 typing_extensions
+
+plotly
+pandas
