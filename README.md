@@ -1,6 +1,6 @@
-# 🥗🏋️‍♀️ NutriSync — Your AI Diet, Fitness & Hydration Coach
+# 🥗🏋️‍♀️ NutriSync — Your AI Diet & Fitness Coach
 
-**NutriSync** blends **nutrition**, **fitness**, and **hydration tracking**, keeping you aligned with your health goals every single day.
+**NutriSync** blends **nutrition** and **fitness**, keeping you aligned with your health goals every single day.
 Powered by **Streamlit**, **LangChain**, and **Google Gemini**, NutriSync helps you log meals, track workouts, monitor water intake, and receive personalized coaching based on your unique body profile.
 
 👉 **Live App:**
