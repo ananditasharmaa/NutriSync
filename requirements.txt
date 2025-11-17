@@ -1,17 +1,16 @@
 ﻿streamlit==1.32.2
 
 # Modern LangChain (LC3+)
-langchain==0.3.3
-langchain-core==0.3.10
-langchain-community==0.3.3
-
-# Google GenAI integration
-langchain-google-genai==1.0.2
-google-generativeai==0.8.2
-
-# Required deps
+streamlit
+pandas
+plotly
 pydantic>=2.7.0
 typing_extensions
 
-plotly
-pandas
+# LangChain Core Ecosystem (Allowing >=0.3 ensures compatibility)
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+
+# Google Integration (Must be >= 2.0 for LangChain 0.3 support)
+langchain-google-genai>=2.0.0
