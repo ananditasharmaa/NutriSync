@@ -2,8 +2,8 @@ import streamlit as st
 import json
 import re
 from datetime import datetime
-from langchain_core.prompts import PromptTemplate
-from langchain_google_genai import GoogleGenerativeAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.output_parsers import StrOutputParser
 import plotly.express as px
 import pandas as pd
@@ -16,12 +16,12 @@ WATER_GOAL_LITRES = 2.5 # Global average hydration goal
 
 
 # ----------------------------
-# 2. LLM SETUP
+# 2. LLM SETUP (LC3 + ChatGoogleGenerativeAI)
 # ----------------------------
 try:
-    llm = GoogleGenerativeAI(
-        model="gemini-2.5-flash",
-        google_api_key=st.secrets["GOOGLE_API_KEY"]
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-1.5-flash",   # you can change to a different Gemini model if needed
+        api_key=st.secrets["GOOGLE_API_KEY"]
     )
 except Exception:
     st.error(
@@ -35,87 +35,66 @@ except Exception:
 
 
 # ----------------------------
-# 3. PROMPTS
+# 3. PROMPTS (using ChatPromptTemplate)
 # ----------------------------
 
 # Meal analyzer: returns macros in JSON
-prompt_meal_analyzer = PromptTemplate(
-    input_variables=["meal_description"],
-    template=(
-        "You are a nutrition analysis expert. Analyze the following meal description "
-        "and provide a reasonable estimate for its nutritional content.\n"
-        "Your response MUST be ONLY a JSON object with the keys "
-        "'calories', 'protein_g', 'carbs_g', and 'fats_g'. "
-        "Do not include any other text.\n\n"
-        "Meal: {meal_description}\n\n"
-        "JSON Output:"
-    ),
+prompt_meal_analyzer = ChatPromptTemplate.from_template(
+    "You are a nutrition analysis expert. Analyze the following meal description "
+    "and provide a reasonable estimate for its nutritional content.\n"
+    "Your response MUST be ONLY a JSON object with the keys "
+    "'calories', 'protein_g', 'carbs_g', and 'fats_g'. "
+    "Do not include any other text.\n\n"
+    "Meal: {meal_description}\n\n"
+    "JSON Output:"
 )
 
 # Workout analyzer: returns calories burned in JSON
-prompt_workout_analyzer = PromptTemplate(
-    input_variables=["workout_description", "user_profile"],
-    template=(
-        "You are a fitness expert. Analyze the following workout and user profile to "
-        "estimate calories burned.\n"
-        "Your response MUST be ONLY a JSON object with the key 'calories_burned'. "
-        "Do not include any other text.\n\n"
-        "Workout: {workout_description}\n"
-        "User: {user_profile}\n\n"
-        "JSON Output:"
-    ),
+prompt_workout_analyzer = ChatPromptTemplate.from_template(
+    "You are a fitness expert. Analyze the following workout and user profile to "
+    "estimate calories burned.\n"
+    "Your response MUST be ONLY a JSON object with the key 'calories_burned'. "
+    "Do not include any other text.\n\n"
+    "Workout: {workout_description}\n"
+    "User: {user_profile}\n\n"
+    "JSON Output:"
 )
 
-# Daily coach prompt – now includes HYDRATION
-prompt_daily_coach = PromptTemplate(
-    input_variables=[
-        "user_profile",
-        "goal",
-        "calorie_target",
-        "logged_meals_summary",
-        "total_consumption",
-        "logged_workouts_summary",
-        "calories_burned",
-        "adjusted_calorie_target",
-        "bmi_category",
-        "water_litres",
-        "water_goal_litres",
-    ],
-    template=(
-        "You are a structured, encouraging AI Diet & Fitness Coach.\n"
-        "YOUR ENTIRE RESPONSE MUST BE IN CLEAN MARKDOWN WITH HEADINGS, BULLET LISTS, "
-        "AND CLEAR SPACING. KEEP EACH PARAGRAPH UNDER 3 LINES. DO NOT RETURN WALLS OF TEXT.\n\n"
-        "------------------------\n"
-        "### 👤 User Summary\n"
-        "- **Profile:** {user_profile}\n"
-        "- **Primary Goal:** {goal}\n"
-        "- **BMI Category:** {bmi_category}\n"
-        "- **Base Calorie Target:** {calorie_target} kcal\n"
-        "- **Adjusted Calorie Target (with workouts):** {adjusted_calorie_target} kcal\n"
-        "- **Calories Burned from Workouts:** {calories_burned} kcal\n"
-        "- **Meals Logged:** {logged_meals_summary}\n"
-        "- **Today's Intake:** {total_consumption}\n"
-        "- **Water Intake:** {water_litres} L / {water_goal_litres} L goal\n"
-        "------------------------\n\n"
-        "### 📈 Daily Summary & Insights\n"
-        "- Start with a short, motivating summary.\n"
-        "- Compare intake vs adjusted calorie target (over, under, or on track).\n"
-        "- Call out one key macro insight (e.g., protein high/low, carbs heavy, fats balance).\n"
-        "- Briefly mention if hydration is below, meeting, or above the goal.\n\n"
-        "### 🍎 Meal Recommendations\n"
-        "- Suggest 2–3 specific meal or snack ideas aligned with their goal.\n"
-        "- For each, explain WHY it's good (e.g., high protein for muscle, high fiber for satiety).\n"
-        "- If hydration is low, prefer water-rich foods (soups, fruits, etc.) where relevant.\n\n"
-        "### 🏋️‍♂️ Workout Suggestions\n"
-        "- Recommend 1–2 exercise types that suit their goal and BMI category.\n"
-        "- Explain the benefit of each in simple, practical language.\n\n"
-        "### 💧 Hydration & Recovery Tip\n"
-        "- Provide 1 hydration-focused tip (e.g., spread water across the day, add an extra glass with meals).\n"
-        "- Add a short recovery tip (sleep, stretching, light movement) if workouts are logged.\n"
-    ),
+# Daily coach prompt – includes HYDRATION
+prompt_daily_coach = ChatPromptTemplate.from_template(
+    "You are a structured, encouraging AI Diet & Fitness Coach.\n"
+    "YOUR ENTIRE RESPONSE MUST BE IN CLEAN MARKDOWN WITH HEADINGS, BULLET LISTS, "
+    "AND CLEAR SPACING. KEEP EACH PARAGRAPH UNDER 3 LINES. DO NOT RETURN WALLS OF TEXT.\n\n"
+    "------------------------\n"
+    "### 👤 User Summary\n"
+    "- **Profile:** {user_profile}\n"
+    "- **Primary Goal:** {goal}\n"
+    "- **BMI Category:** {bmi_category}\n"
+    "- **Base Calorie Target:** {calorie_target} kcal\n"
+    "- **Adjusted Calorie Target (with workouts):** {adjusted_calorie_target} kcal\n"
+    "- **Calories Burned from Workouts:** {calories_burned} kcal\n"
+    "- **Meals Logged:** {logged_meals_summary}\n"
+    "- **Today's Intake:** {total_consumption}\n"
+    "- **Water Intake:** {water_litres} L / {water_goal_litres} L goal\n"
+    "------------------------\n\n"
+    "### 📈 Daily Summary & Insights\n"
+    "- Start with a short, motivating summary.\n"
+    "- Compare intake vs adjusted calorie target (over, under, or on track).\n"
+    "- Call out one key macro insight (e.g., protein high/low, carbs heavy, fats balance).\n"
+    "- Briefly mention if hydration is below, meeting, or above the goal.\n\n"
+    "### 🍎 Meal Recommendations\n"
+    "- Suggest 2–3 specific meal or snack ideas aligned with their goal.\n"
+    "- For each, explain WHY it's good (e.g., high protein for muscle, high fiber for satiety).\n"
+    "- If hydration is low, prefer water-rich foods (soups, fruits, etc.) where relevant.\n\n"
+    "### 🏋️‍♂️ Workout Suggestions\n"
+    "- Recommend 1–2 exercise types that suit their goal and BMI category.\n"
+    "- Explain the benefit of each in simple, practical language.\n\n"
+    "### 💧 Hydration & Recovery Tip\n"
+    "- Provide 1 hydration-focused tip (e.g., spread water across the day, add an extra glass with meals).\n"
+    "- Add a short recovery tip (sleep, stretching, light movement) if workouts are logged.\n"
 )
 
-# LangChain chains
+# LangChain chains (LCEL)
 meal_analyzer_chain = prompt_meal_analyzer | llm | StrOutputParser()
 workout_analyzer_chain = prompt_workout_analyzer | llm | StrOutputParser()
 daily_coach_chain = prompt_daily_coach | llm | StrOutputParser()
