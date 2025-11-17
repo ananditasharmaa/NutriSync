@@ -145,26 +145,3 @@ pandas
 pip freeze
 python -c "import pydantic; print(pydantic.__version__)"
 ```
-
----
-
-## 🎯 Roadmap
-
-* 🛏️ Sleep tracking
-* 🔄 Weekly progress reports and downloadable summaries
-* 🧩 Diet plan generator (weekly meal plans)
-* 📱 Mobile-friendly UI improvements
-
----
-
-## ✨ Want help?
-
-I can also:
-
-* Add badges (Python, Streamlit deploy)
-* Create a short intro GIF/banner for the README
-* Provide a minimal `runtime.txt` and `requirements.txt` you can drop into the repo
-
----
-
-*Thanks for building NutriSync — tell me what else you'd like to include in the README or the repo!*
